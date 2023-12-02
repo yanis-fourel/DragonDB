@@ -6,11 +6,14 @@ import (
 )
 
 func main() {
-	store, err := store.NewDiskStore()
+	s, err := store.New()
 	if err != nil {
 		panic(err)
 	}
-	defer store.Close()
 
-	fmt.Println("Ok la")
+	s.Set("foo", "bar")
+	s.Set("baz", "qux")
+	fmt.Println(s.Get("foo"))
+	fmt.Println(s.Get("baz"))
+	fmt.Println(s.Get("qux"))
 }
