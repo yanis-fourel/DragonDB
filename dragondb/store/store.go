@@ -1,11 +1,12 @@
 package store
 
 import (
+	"bufio"
 	"fmt"
-	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 var dbfile string = filepath.Join("_dragondata", "data.db")
@@ -22,10 +23,12 @@ func New() (*Store, error) {
 		return nil, err
 	}
 
-	return &Store{
+	res := Store{
 		data: make(map[string]string),
 		file: file,
-	}, nil
+	}
+	res.readDisk()
+	return &res, nil
 }
 
 func (s *Store) Close() error {
@@ -42,30 +45,30 @@ func (s *Store) Get(key string) string {
 }
 
 func (s *Store) writeDisk(mem *Store) error {
+	s.file.Truncate(0)
 	s.file.Seek(0, 0)
 	for k, v := range mem.data {
-		_, _ = fmt.Fprintf(s.file, "%s=%s\n", k, v)
-		// fuck err
+		fmt.Println("Writing to disk:", k, v)
+		_, err := fmt.Fprintf(s.file, "%s=%s\n", k, v)
+		_ = err // fuck err
 	}
 
 	return nil
 }
 
-func (s *Store) readDisk(key string) (string, error) {
+func (s *Store) readDisk() error {
 	s.file.Seek(0, 0)
-	var k, v string
-	for {
-		_, err := fmt.Fscanf(s.file, "%s=%s\n", &k, &v)
-		if err == io.EOF {
-			return "", nil
-		}
-		fmt.Println("Found:", k, v)
+	scann := bufio.NewScanner(s.file)
 
-		if err != nil {
-			return "", err
-		}
-		if k == key {
-			return v, nil
-		}
+	for scann.Scan() {
+		line := scann.Text()
+		k, v, _ := strings.Cut(line, "=")
+		// fuck errors
+
+		fmt.Printf("Found: '%s' -> '%s'\n", k, v)
+
+		s.data[k] = v
 	}
+
+	return nil
 }
