@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 )
 
-var dbfile string = filepath.Join("_dragon", "data.db")
+var dbfile string = filepath.Join("_dragondata", "data.db")
 
 type DiskStore struct {
 	file *os.File
